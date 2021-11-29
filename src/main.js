@@ -7,6 +7,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
+import mock from './mock'
 
 // 设置 js中可以访问 $cdn
 import { $cdn } from '@/config'
@@ -27,5 +28,6 @@ new Vue({
   el: '#app',
   router,
   store,
+  mock,
   render: h => h(App)
 })

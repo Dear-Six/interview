@@ -1,7 +1,6 @@
 const api = {
-  Login: '/user/login',
-  UserInfo: '/user/userinfo',
-  UserName: '/user/name'
+  review: '/reviewMock',
+  addReview: '/addReview'
 }
 
 export default api
