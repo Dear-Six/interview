@@ -5,8 +5,8 @@
       <div>评论({{ reviewNum }})</div>
       <div class="addReview" @click="addItem('review')">添加评论</div>
       <van-popup v-model="show" position="bottom" :style="{ height: '30%' }" class="popup">
-        <van-field v-model="text" class="field"> </van-field>
-        <van-button size="small" type="info" @click="sumbit">发送</van-button>
+        <van-field v-model="text" :placeholder="placeholder" class="field"> </van-field>
+        <van-button size="small" type="info" @click="submit">发送</van-button>
       </van-popup>
     </div>
     <div v-for="(item, index) in data" :key="index" class="box-item">
@@ -23,13 +23,44 @@
         </div>
       </div>
       <div class="content">{{item.content}}</div>
+      <div v-if="item.chilrenReply.length>0" class="container-reply">
+        <div v-if="item.unfold">
+          <div
+            v-for="(child, index) in item.chilrenReply.slice(0,3)"
+            :key="index"
+            class="container-item"
+            @click="replyUser(child,'replyUser')"
+          >
+              <span>{{child.name}} </span>
+              <span style="color:#666262">
+                {{child.content}}
+              </span>
+          </div>
+          <span v-if="item.unfold" class="fold" @click="unfold(item)">展开全部{{item.chilrenReply.length}}条消息</span>
+        </div>
+        <div v-else>
+          <div v-for="(child, index) in item.chilrenReply" :key="index" class="container-item" @click="replyUser(child,'replyUser')">
+              <span>{{child.name}} </span>
+              <span style="color:#666262">
+                {{child.content}}
+              </span>
+          </div>
+        </div>
+
+      </div>
+
     </div>
   </div>
 </template>
 
 <script>
 import * as api from '../api/review'
+// import Popup from '../components/Popup.vue'
+
 export default {
+  // components: {
+  //   Popup
+  // },
   data() {
     return {
       reviewNum: 0,
@@ -38,7 +69,8 @@ export default {
       data: [],
       isLike: false,
       likeNum: 0,
-      type: ''
+      type: '',
+      placeholder: ''
     }
   },
   async mounted() {
@@ -50,22 +82,60 @@ export default {
       this.show = true
       this.type = type
     },
-    async sumbit() {
+    async addReview(val) {
+      const res = await api.addReview()
+      res.content = val
+      if (res.chilrenReply.length > 3) res.unfold = true
+      this.data.unshift(res)
+      this.show = false
+      this.text = ''
+    },
+    async addReply(val) {
+        this.data[0]?.chilrenReply.unshift({
+          name: 'six',
+          content: val
+        })
+        this.show = false
+        this.text = ''
+    },
+    async submit(val) {
       if (this.type === 'review') {
         const res = await api.addReview()
         res.content = this.text
+        if (res.chilrenReply.length > 3) res.unfold = true
         this.data.unshift(res)
         this.show = false
         this.text = ''
-        console.log(res)
+        console.log(this.data)
       }
       if (this.type === 'reply') {
+        this.data[0]?.chilrenReply.unshift({
+          name: 'six',
+          content: this.text
+        })
+        this.show = false
+        this.text = ''
+      }
+      if (this.type === 'replyUser') {
         console.log(this.text)
+        this.show = false
       }
     },
     setLike(val) {
       val.isLike = !val.isLike
       val.isLike ? val.likeNum++ : val.likeNum--
+    },
+    unfold(item) {
+      item.unfold = false
+    },
+    replyUser(item, type) {
+      this.show = true
+      this.type = type
+      this.placeholder = `回复 @${item.name}：`
+      this.data[0].chilrenReply.push({
+        name: `six 回复 @${item.name}：`,
+        content: this.text
+      })
     }
   }
 }
@@ -90,7 +160,7 @@ export default {
     width: 80%;
   }
   /deep/ .van-field__body {
-    background-color: #ccc;
+    background-color: #eee;
     padding: 0 10px;
   }
   /deep/ .van-popup {
@@ -110,8 +180,7 @@ export default {
     padding-bottom: 5px;
   }
   .content {
-    margin-left: 50px;
-    margin-top: 10px;
+    margin: 10px 0 10px 50px;
     font-size: 16px;
   }
   .box-item {
@@ -125,6 +194,18 @@ export default {
     .icon_good {
       margin: 0 20px 0 5px;
     }
+  }
+  .container-reply {
+    background-color: #eee;
+    padding: 5px 10px 5px 10px;
+    margin-left: 50px;
+    font-size: 16px;
+    .fold {
+      color: royalblue;
+    }
+  }
+  .container-item {
+    padding-bottom: 10px;
   }
 }
 </style>
