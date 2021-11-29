@@ -2,124 +2,126 @@
 <template>
   <div class="index-container">
     <div class="top df">
-      <div>评论({{ reviewNum }})</div>
-      <div class="addReview" @click="addItem('review')">添加评论</div>
-      <van-popup v-model="show" position="bottom" :style="{ height: '30%' }" class="popup">
-        <van-field v-model="text" :placeholder="placeholder" class="field"> </van-field>
-        <van-button size="small" type="info" @click="submit">发送</van-button>
-      </van-popup>
+      <div>评论({{ data.length }})</div>
+      <div class="addReview" @click="showReview = true">添加评论</div>
+      <Popup :show="showReview" @submit="addReview" />
     </div>
+    <van-empty v-if="!data.length" description="快来发表你的评论吧" />
     <div v-for="(item, index) in data" :key="index" class="box-item">
       <div class="df">
         <img :src="item.img" class="img" />
         <div class="name_date">
-          <div>{{item.name}}</div>
-          <div>{{item.date}}</div>
+          <div>{{ item.name }}</div>
+          <div>{{ item.date }}</div>
         </div>
         <div class="icon_item">
-          <van-icon name="good-job-o" size="22" :color="item.isLike ? '#ea6620' : '#333'" @click="setLike(item)"/>
-          <span class="fs16 icon_good" :style="{color: item.isLike ? '#ea6620' : '#333'}">{{item.likeNum}}</span>
-          <van-icon name="chat-o" size="22" @click="addItem('reply')"/>
+          <van-icon name="good-job-o" size="22" :color="item.isLike ? '#ea6620' : '#333'" @click="setLike(item)" />
+          <span class="fs16 icon_good" :style="{ color: item.isLike ? '#ea6620' : '#333' }">{{ item.likeNum }}</span>
+          <van-icon name="chat-o" size="22" @click="showReply = true" />
         </div>
+        <Popup :show="showReply" @submit="addReply" />
       </div>
-      <div class="content">{{item.content}}</div>
-      <div v-if="item.chilrenReply.length>0" class="container-reply">
+      <div class="content">{{ item.content }}</div>
+      <div v-if="item.chilrenReply.length > 0" class="container-reply">
         <div v-if="item.unfold">
           <div
-            v-for="(child, index) in item.chilrenReply.slice(0,3)"
-            :key="index"
+            v-for="(child, indexChild) in item.chilrenReply.slice(0, 3)"
+            :key="indexChild"
             class="container-item"
-            @click="replyUser(child,'replyUser')"
+            @click="replyUser(child, index)"
           >
-              <span>{{child.name}} </span>
-              <span style="color:#666262">
-                {{child.content}}
-              </span>
+            <span>{{ child.text }} :</span>
+            <span style="color: #666262">
+              {{ child.content }}
+            </span>
           </div>
-          <span v-if="item.unfold" class="fold" @click="unfold(item)">展开全部{{item.chilrenReply.length}}条消息</span>
+          <span
+            v-if="item.unfold"
+            @click="unfold(item)"
+            class="fold"
+            >展开全部{{ item.chilrenReply.length }}条消息</span
+          >
         </div>
         <div v-else>
-          <div v-for="(child, index) in item.chilrenReply" :key="index" class="container-item" @click="replyUser(child,'replyUser')">
-              <span>{{child.name}} </span>
-              <span style="color:#666262">
-                {{child.content}}
-              </span>
+          <div
+            v-for="(child, indexChild) in item.chilrenReply"
+            :key="indexChild"
+            class="container-item"
+            @click="replyUser(child, index)"
+          >
+            <span>{{ child.text }} :</span>
+            <span style="color: #666262">
+              {{ child.content }}
+            </span>
           </div>
         </div>
-
+        <Popup :placeholder="placeholder" :show="showReplyUser" @submit="addReplyUser" />
       </div>
-
     </div>
   </div>
 </template>
 
 <script>
 import * as api from '../api/review'
-// import Popup from '../components/Popup.vue'
+import Popup from '../components/Popup.vue'
 
 export default {
-  // components: {
-  //   Popup
-  // },
+  components: {
+    Popup
+  },
   data() {
     return {
       reviewNum: 0,
-      show: false,
+      showReview: false,
+      showReply: false,
+      showReplyUser: false,
       text: '',
       data: [],
       isLike: false,
       likeNum: 0,
       type: '',
-      placeholder: ''
+      placeholder: '',
+      index: 0
     }
   },
   async mounted() {
     const res = await api.getReview()
     this.reviewNum = res.reviewNum
+    // 模拟请求失败
+    // try {
+    //   await api.error()
+    // } catch (error) {
+    //   console.log(error)
+    // }
   },
   methods: {
-    addItem(type) {
-      this.show = true
-      this.type = type
-    },
     async addReview(val) {
+      this.showReview = false
       const res = await api.addReview()
       res.content = val
       if (res.chilrenReply.length > 3) res.unfold = true
       this.data.unshift(res)
-      this.show = false
-      this.text = ''
     },
     async addReply(val) {
-        this.data[0]?.chilrenReply.unshift({
-          name: 'six',
-          content: val
-        })
-        this.show = false
-        this.text = ''
+      this.showReply = false
+      this.data[0]?.chilrenReply.unshift({
+        name: 'six',
+        content: val,
+        text: 'six'
+      })
     },
-    async submit(val) {
-      if (this.type === 'review') {
-        const res = await api.addReview()
-        res.content = this.text
-        if (res.chilrenReply.length > 3) res.unfold = true
-        this.data.unshift(res)
-        this.show = false
-        this.text = ''
-        console.log(this.data)
-      }
-      if (this.type === 'reply') {
-        this.data[0]?.chilrenReply.unshift({
-          name: 'six',
-          content: this.text
-        })
-        this.show = false
-        this.text = ''
-      }
-      if (this.type === 'replyUser') {
-        console.log(this.text)
-        this.show = false
-      }
+    replyUser(item, index) {
+      this.index = index
+      this.showReplyUser = true
+      this.placeholder = `回复 @${item.name}`
+    },
+    async addReplyUser(val) {
+      this.showReplyUser = false
+      this.data[this.index].chilrenReply.push({
+        name: 'six',
+        text: `six ${this.placeholder}`,
+        content: val
+      })
     },
     setLike(val) {
       val.isLike = !val.isLike
@@ -127,21 +129,12 @@ export default {
     },
     unfold(item) {
       item.unfold = false
-    },
-    replyUser(item, type) {
-      this.show = true
-      this.type = type
-      this.placeholder = `回复 @${item.name}：`
-      this.data[0].chilrenReply.push({
-        name: `six 回复 @${item.name}：`,
-        content: this.text
-      })
     }
   }
 }
 </script>
 <style lang="scss" scoped>
-@import "./css.scss";
+@import './css.scss';
 
 .index-container {
   padding: 20px;
@@ -187,7 +180,7 @@ export default {
     padding: 20px 0;
     border-bottom: 1px solid #eee;
   }
-  .icon_item{
+  .icon_item {
     display: flex;
     align-items: center;
     margin-left: auto;

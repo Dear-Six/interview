@@ -1,10 +1,8 @@
 <template>
-  <div>
-    <van-popup v-model="show" position="bottom" :style="{ height: '30%' }" class="popup">
-      <van-field v-model="text" class="field"> </van-field>
-      <van-button size="small" type="info" @click="submit">发送</van-button>
-    </van-popup>
-  </div>
+  <van-popup v-model="show" position="bottom" :style="{ height: '30%' }" class="popup">
+    <van-field v-model="text" class="field" :placeholder="placeholder"> </van-field>
+    <van-button size="small" type="info" @click="submit">发送</van-button>
+  </van-popup>
 </template>
 <script>
 export default {
@@ -13,6 +11,10 @@ export default {
     show: {
       type: Boolean,
       default: false
+    },
+    placeholder: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -21,15 +23,16 @@ export default {
     }
   },
   methods: {
-    sumbit(value) {
+    submit(value) {
       this.$emit('submit', this.text)
+      this.text = ''
     }
   }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
+<style lang="scss" scoped>
 h3 {
   margin: 40px 0 0;
 }
@@ -43,5 +46,10 @@ li {
 }
 a {
   color: #42b983;
+}
+/deep/ .van-popup {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
 }
 </style>

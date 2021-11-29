@@ -19,3 +19,20 @@ export function addReview(params) {
     hideloading: true
   })
 }
+
+export function error(params) {
+  return request({
+    url: api.error,
+    method: 'get',
+    params,
+    hideloading: true
+  })
+}
+export function list(params) {
+  return request({
+    url: api.list,
+    method: 'get',
+    params,
+    hideloading: true
+  })
+}

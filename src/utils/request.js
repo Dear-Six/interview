@@ -43,14 +43,16 @@ service.interceptors.response.use(
           location.reload()
         })
       }
-      return Promise.reject(res || 'error')
+      if (res.status === 444) {
+        Toast.fail(res.err)
+      }
+      return Promise.reject(res.err || 'error')
     } else {
       return Promise.resolve(res)
     }
   },
   error => {
     Toast.clear()
-    console.log('err' + error) // for debug
     return Promise.reject(error)
   }
 )
